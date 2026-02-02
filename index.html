@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seguro — подбор и сравнение страховок в Испании</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav">
+      <div class="logo">Seguro</div>
+      <div class="nav-links">
+        <a href="#calculator">Калькулятор</a>
+        <a href="#kpi">KPI</a>
+        <a href="#contact">Связаться</a>
+      </div>
+      <button class="cta">Получить варианты</button>
+    </nav>
+    <div class="hero-content">
+      <div>
+        <p class="eyebrow">Платформа сравнения страховых продуктов в Испании</p>
+        <h1>Понятный подбор страховки по цене и покрытию — за пару минут</h1>
+        <p class="subhead">Заполните данные, получите прозрачные варианты, оставьте заявку и доведите покупку с менеджером или партнёром.</p>
+        <div class="hero-actions">
+          <button class="cta">Начать подбор</button>
+          <button class="ghost">Как это работает</button>
+        </div>
+        <div class="trust">
+          <span>Покрытие от</span>
+          <strong>€12/мес</strong>
+          <span>· 20+ партнёров</span>
+          <span>· Онлайн и офлайн</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h3>Что получите</h3>
+        <ul>
+          <li>Сравнение цен и покрытий в одном окне</li>
+          <li>Прозрачные условия без сложного языка</li>
+          <li>Консультация и оформление с экспертом</li>
+        </ul>
+        <button class="cta">Посмотреть варианты</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="steps" id="steps">
+      <h2>Пользовательский сценарий</h2>
+      <div class="step-grid">
+        <div class="step-card">
+          <span>1</span>
+          <h3>Пользователь вводит данные</h3>
+          <p>Возраст, цель, тип покрытия, регион, дополнительные опции.</p>
+        </div>
+        <div class="step-card">
+          <span>2</span>
+          <h3>Получает понятные варианты</h3>
+          <p>Цены, лимиты, франшизы и ключевые исключения в одном списке.</p>
+        </div>
+        <div class="step-card">
+          <span>3</span>
+          <h3>Оставляет заявку или оформляет</h3>
+          <p>Удобная форма + выбор канала связи.</p>
+        </div>
+        <div class="step-card">
+          <span>4</span>
+          <h3>Менеджер доводит до покупки</h3>
+          <p>Проверка документов, ответы на вопросы, финализация.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="calculator" id="calculator">
+      <div class="calculator-header">
+        <h2>Калькулятор страховки</h2>
+        <p>Укажите параметры — система подготовит 3 понятных варианта.</p>
+      </div>
+      <div class="calculator-grid">
+        <form class="calc-form" id="calc-form">
+          <label>
+            Тип страховки
+            <select name="type" required>
+              <option value="medical">Медицинская</option>
+              <option value="auto">Авто</option>
+              <option value="home">Недвижимость</option>
+              <option value="life">Жизнь</option>
+            </select>
+          </label>
+          <label>
+            Возраст
+            <input type="number" name="age" min="18" max="75" value="32" required />
+          </label>
+          <label>
+            Регион
+            <select name="region" required>
+              <option value="madrid">Мадрид</option>
+              <option value="barcelona">Барселона</option>
+              <option value="valencia">Валенсия</option>
+              <option value="andalusia">Андалусия</option>
+            </select>
+          </label>
+          <label>
+            Уровень покрытия
+            <select name="coverage" required>
+              <option value="basic">Базовый</option>
+              <option value="standard">Стандарт</option>
+              <option value="premium">Премиум</option>
+            </select>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="expat" />
+            Я экспат / нужен полис для ВНЖ
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="family" />
+            Семейное покрытие
+          </label>
+          <button type="submit" class="cta">Показать варианты</button>
+        </form>
+
+        <div class="results" id="results">
+          <div class="results-header">
+            <h3>Варианты по цене и покрытию</h3>
+            <p>Сравните ключевые параметры и выберите лучший.</p>
+          </div>
+          <div class="result-cards" id="result-cards">
+            <div class="result-card">
+              <h4>Seguro Base</h4>
+              <p class="price">€18/мес</p>
+              <ul>
+                <li>Покрытие €30 000</li>
+                <li>Онлайн-консультации</li>
+                <li>Франшиза €50</li>
+              </ul>
+              <button class="ghost">Оставить заявку</button>
+            </div>
+            <div class="result-card highlight">
+              <h4>Seguro Smart</h4>
+              <p class="price">€29/мес</p>
+              <ul>
+                <li>Покрытие €60 000</li>
+                <li>Клиники сети партнёров</li>
+                <li>Франшиза €0</li>
+              </ul>
+              <button class="cta">Оформить</button>
+            </div>
+            <div class="result-card">
+              <h4>Seguro Plus</h4>
+              <p class="price">€41/мес</p>
+              <ul>
+                <li>Покрытие €150 000</li>
+                <li>Экстренная помощь 24/7</li>
+                <li>Семейные опции</li>
+              </ul>
+              <button class="ghost">Подробнее</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lead" id="contact">
+      <div class="lead-content">
+        <h2>Оставьте заявку — мы свяжемся в течение 15 минут</h2>
+        <p>Менеджер уточнит детали, поможет выбрать оптимальный продукт и довести оформление до покупки.</p>
+      </div>
+      <form class="lead-form" id="lead-form">
+        <label>
+          Имя
+          <input type="text" name="name" placeholder="Мария" required />
+        </label>
+        <label>
+          Телефон / WhatsApp
+          <input type="tel" name="phone" placeholder="+34 600 000 000" required />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" placeholder="maria@email.com" required />
+        </label>
+        <label>
+          Предпочтительный канал связи
+          <select name="channel">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="call">Звонок</option>
+            <option value="email">Email</option>
+          </select>
+        </label>
+        <button type="submit" class="cta">Отправить заявку</button>
+        <p class="form-note">Нажимая кнопку, вы соглашаетесь на обработку данных.</p>
+      </form>
+    </section>
+
+    <section class="kpi" id="kpi">
+      <h2>KPI для MVP</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <h3>Конверсия “калькулятор → лид”</h3>
+          <p>Целевой диапазон задаётся бизнесом и проверяется через A/B тесты и аналитику событий.</p>
+        </div>
+        <div class="kpi-card">
+          <h3>CPL/CPA по каналам</h3>
+          <p>Раздельные воронки для SEO, PPC и партнёрского трафика с UTM-атрибуцией.</p>
+        </div>
+        <div class="kpi-card">
+          <h3>Доля лидов с валидными контактами</h3>
+          <p>Валидация телефонов и email, автоматические проверки на дубликаты.</p>
+        </div>
+        <div class="kpi-card">
+          <h3>Скорость расчёта</h3>
+          <p>Контроль TTFB/INP, кеширование тарифов, мониторинг стабильности.</p>
+        </div>
+        <div class="kpi-card">
+          <h3>SEO-видимость</h3>
+          <p>Индексация страниц, рост органики, охват коммерческих кластеров.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>
+      <h3>Seguro</h3>
+      <p>Платформа подбора и сравнения страховок в Испании.</p>
+    </div>
+    <div>
+      <h4>Контакты</h4>
+      <p>hello@seguro.es</p>
+      <p>+34 900 000 000</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast">Спасибо! Мы свяжемся с вами.</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
