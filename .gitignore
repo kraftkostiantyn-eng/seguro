@@ -5,3 +5,6 @@ __pycache__/
 *.sqlite
 config.yaml
 results*.csv
+downloads/
+report.html
+candidates.csv

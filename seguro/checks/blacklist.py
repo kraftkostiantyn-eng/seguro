@@ -1,4 +1,4 @@
-"""Перевірка доменних чорних списків (DNSBL/URIBL) через DNS-запити."""
+"""Перевірка доменних чорних списків (DNSBL/URIBL) через DNS-запити — безкоштовно."""
 
 from __future__ import annotations
 
@@ -9,25 +9,22 @@ import dns.exception
 import dns.resolver
 
 from ..models import Candidate, Result
-from .base import Context
+from .base import BaseCheck, Context
 
 # Відповіді 127.255.255.x / 127.0.0.1 від Spamhaus і URIBL означають помилку запиту
 # (публічний резолвер, перевищено ліміт), а не лістинг.
 _ERROR_ANSWERS = {"127.255.255.252", "127.255.255.254", "127.255.255.255", "127.0.0.1"}
 
 
-class BlacklistCheck:
+class BlacklistCheck(BaseCheck):
     name = "blacklist"
 
     def __init__(self) -> None:
         self._resolver: dns.asyncresolver.Resolver | None = None
 
-    def enabled(self, ctx: Context) -> bool:
-        return bool(ctx.config["blacklist"].get("enabled"))
-
     def _get_resolver(self, ctx: Context) -> dns.asyncresolver.Resolver:
         if self._resolver is None:
-            cfg = ctx.config["blacklist"]
+            cfg = self.cfg(ctx)
             resolver = dns.asyncresolver.Resolver()
             if cfg.get("nameservers"):
                 resolver.nameservers = list(cfg["nameservers"])
@@ -49,7 +46,7 @@ class BlacklistCheck:
         return ips
 
     async def run(self, cand: Candidate, result: Result, ctx: Context) -> None:
-        zones = ctx.config["blacklist"]["zones"]
+        zones = self.cfg(ctx)["zones"]
         answers = await asyncio.gather(*(self.lookup(f"{cand.domain}.{z}", ctx) for z in zones))
 
         listed = [z for z, ips in zip(zones, answers) if ips]

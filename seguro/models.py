@@ -27,11 +27,14 @@ class Result:
     """Накопичений результат перевірок одного домену."""
 
     domain: str
+    source: str = ""
     metrics: dict[str, Any] = field(default_factory=dict)
     flags: list[str] = field(default_factory=list)
     rejected_by: str | None = None
     reject_reason: str | None = None
     score: float | None = None
+    # Попередня оцінка за безкоштовними етапами — нею відбираємо, кого пускати на платні.
+    prelim_score: float | None = None
 
     @property
     def rejected(self) -> bool:

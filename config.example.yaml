@@ -1,9 +1,30 @@
 # Скопіюйте в config.yaml і налаштуйте. Невказані ключі беруться з seguro/config.py.
 concurrency: 10
-cache_path: seguro_cache.sqlite
+cache_path: seguro_cache.sqlite     # кеш HTTP-відповідей: повторний прогін не витрачає ліміти
 cache_ttl_days: 14
+download_dir: downloads             # топ-списки та інші великі файли
 host_limits:
-  web.archive.org: 3   # архів банить за частоту, не піднімайте сильно
+  web.archive.org: 3                # архів банить за частоту, не піднімайте сильно
+  rdap.org: 4
+free_only: false                    # true — ніколи не викликати платні/квотовані етапи
+
+store:
+  path: seguro.sqlite               # база результатів і ручних статусів
+  rerun_after_days: 30              # перевірений домен не перевіряється знову N днів
+
+# Віддалені джерела для `seguro fetch` / `seguro run --sources`.
+# URL-и джерел час від часу змінюються — якщо завантаження впало, оновіть url.
+sources:
+  - name: godaddy
+    type: godaddy                   # публічний дамп аукціонів GoDaddy (json.zip)
+    enabled: false
+  - name: namejet
+    type: namejet                   # щоденний список, {date:%m-%d-%Y} підставляється автоматично
+    enabled: false
+  - name: my_list
+    type: url                       # будь-який txt/csv/json/zip зі списком доменів
+    url: https://example.com/drops.csv
+    enabled: false
 
 prefilter:
   allowed_tlds: [com, net, org, ua, pl, de]
@@ -12,14 +33,41 @@ prefilter:
   max_hyphens: 1
   allow_digits: false
   stopwords: [xxx, porn, sex, viagra, cialis, loan, replica]
+  # Пороги за колонками експорту (ExpiredDomains.net: DP — реф-домени, ABY — рік в архіві,
+  # ACR — кількість знімків). Дані вже є у файлі — відсів до будь-яких запитів.
+  min_extra: {}                     # напр. {DP: 5, ACR: 20}
+  max_extra: {}                     # напр. {ABY: 2019}
+
+localists:
+  enabled: true
+  # Файли з доменами (txt або csv, домен у першій колонці). Збіг і по батьківському домену.
+  reject: []                        # напр. [{name: rkn, path: lists/rkn_blocked.txt}]
+  flag: []                          # напр. [{name: bought, path: lists/bought.txt}]
 
 blacklist:
   enabled: true
-  # Spamhaus не відповідає публічним резолверам. Варіанти:
+  # Spamhaus/SURBL/URIBL не відповідають публічним резолверам (8.8.8.8, 1.1.1.1). Варіанти:
   #  - свій резолвер (unbound) у nameservers;
   #  - безкоштовний ключ Spamhaus DQS: "<key>.dbl.dq.spamhaus.net".
-  zones: [dbl.spamhaus.org, multi.surbl.org, multi.uribl.com]
+  zones: [dbl.spamhaus.org, multi.surbl.org, multi.uribl.com, uribl.spameatingmonkey.net, dbl.nordspam.com]
   nameservers: []
+
+toplists:
+  enabled: true
+  max_age_days: 7                   # як часто перекачувати списки
+  lists:
+    - {name: tranco, url: "https://tranco-list.eu/top-1m.csv.zip", format: rank_domain, enabled: true}
+    - {name: majestic, url: "https://downloads.majestic.com/majestic_million.csv", format: majestic, enabled: true}
+    - {name: umbrella, url: "https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip", format: rank_domain, enabled: false}
+
+openpagerank:                       # безкоштовний ключ: openpagerank.com
+  enabled: auto                     # auto = увімкнено, якщо задано SEGURO_OPR_KEY
+  api_key_env: SEGURO_OPR_KEY
+  min_score: null                   # напр. 1.0 — відсіювати домени з OPR нижче
+
+safebrowsing:                       # безкоштовний ключ Google Safe Browsing
+  enabled: auto
+  api_key_env: SEGURO_GSB_KEY
 
 rdap:
   enabled: true
@@ -28,25 +76,33 @@ wayback:
   enabled: true
   min_snapshots: 10
   min_years_active: 2
-  sample_per_year: 1
-  max_samples: 8
+  max_samples: 6                    # знімків на домен (по одному на рік, від найсвіжіших)
   target_languages: [uk, en]
   reject_categories: [pharma, adult, doorway_cjk]
   max_parking_ratio: 0.6
 
+index:                              # Google Custom Search JSON API: 100 запитів/день безкоштовно
+  enabled: auto                     # потрібні SEGURO_GOOGLE_API_KEY і SEGURO_GOOGLE_CX
+  max_domains_per_run: 90
+  min_prelim_score: 40              # лише домени з такою попередньою оцінкою
+
 backlinks:
-  provider: none          # none | majestic | ahrefs
-  api_key_env: SEGURO_BACKLINKS_KEY
+  provider: none                    # none | majestic | ahrefs | moz
+  api_key_env: SEGURO_BACKLINKS_KEY # для moz — "access_id:secret"
+  max_domains_per_run: 50           # бюджет платних викликів за прогін
+  min_prelim_score: 45
   min_ref_domains: 10
-  min_tf_cf_ratio: 0.5    # лише для Majestic
+  min_tf_cf_ratio: 0.5              # лише Majestic
   max_spam_anchor_ratio: 0.2
+  max_spam_score: 30                # лише Moz
 
 scoring:
   min_score: 40
   weights:
     history: 0.25
-    backlinks: 0.25
+    backlinks: 0.20
+    authority: 0.10                 # OPR + топ-списки
     topical: 0.15
-    age: 0.15
+    age: 0.10
     geo: 0.10
     cleanliness: 0.10

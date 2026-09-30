@@ -1,18 +1,20 @@
-"""Беклінк-метрики через платні API (Majestic або Ahrefs).
+"""Беклінк-метрики через API: Majestic, Ahrefs (платні) або Moz (є безкоштовний тариф).
 
-Етап запускається останнім, тож гроші/ліміти витрачаються лише на тих, хто пройшов
-безкоштовні фільтри. Ключ API береться зі змінної оточення (`backlinks.api_key_env`).
+Етап запускається останнім і лише для найкращих за попередньою оцінкою (бюджет
+`max_domains_per_run`, `min_prelim_score`), щоб платні виклики йшли на тих, хто
+пройшов усі безкоштовні фільтри. Ключ береться зі змінної оточення `api_key_env`;
+для Moz — у форматі `access_id:secret`.
 """
 
 from __future__ import annotations
 
+import base64
 import json
-import os
 from datetime import date
 
 from ..classify import CATEGORY_KEYWORDS, _cjk_ratio
 from ..models import Candidate, Result
-from .base import Context
+from .base import BaseCheck, Context
 
 _SPAM_ANCHOR_WORDS = [kw for cat, kws in CATEGORY_KEYWORDS.items() if cat != "gambling" for kw in kws]
 
@@ -91,26 +93,48 @@ class AhrefsProvider:
         }
 
 
-PROVIDERS = {"majestic": MajesticProvider, "ahrefs": AhrefsProvider}
+class MozProvider:
+    """Moz Links API v2: DA, Spam Score, кількість реф-доменів. Ключ `access_id:secret`."""
+
+    URL = "https://lsapi.seomoz.com/v2/url_metrics"
+
+    async def fetch(self, domain: str, key: str, ctx: Context) -> dict:
+        token = base64.b64encode(key.encode()).decode()
+        status, body = await ctx.http.post_json(
+            self.URL, {"targets": [domain]},
+            headers={"Authorization": f"Basic {token}"},
+            cache_key=f"moz:{domain}",
+        )
+        if status != 200:
+            raise RuntimeError(f"Moz: HTTP {status} {body[:200]}")
+        row = (json.loads(body).get("results") or [{}])[0]
+        return {
+            "domain_authority": float(row.get("domain_authority") or 0),
+            "spam_score": float(row.get("spam_score") or 0),
+            "ref_domains": int(row.get("root_domains_to_root_domain") or 0),
+            "backlinks": int(row.get("external_pages_to_root_domain") or 0),
+            "anchors": [],
+        }
 
 
-class BacklinksCheck:
+PROVIDERS = {"majestic": MajesticProvider, "ahrefs": AhrefsProvider, "moz": MozProvider}
+
+
+class BacklinksCheck(BaseCheck):
     name = "backlinks"
+    costly = True
 
     def enabled(self, ctx: Context) -> bool:
-        return ctx.config["backlinks"].get("provider", "none") in PROVIDERS
+        return self.cfg(ctx).get("provider", "none") in PROVIDERS
 
     def validate(self, ctx: Context) -> None:
-        env = ctx.config["backlinks"]["api_key_env"]
-        if not os.environ.get(env):
-            raise RuntimeError(f"не задано змінну оточення {env} з ключем API беклінків")
+        self.api_key(ctx)
 
     async def run(self, cand: Candidate, result: Result, ctx: Context) -> None:
-        cfg = ctx.config["backlinks"]
-        key = os.environ[cfg["api_key_env"]]
+        cfg = self.cfg(ctx)
         provider = PROVIDERS[cfg["provider"]]()
         try:
-            data = await provider.fetch(cand.domain, key, ctx)
+            data = await provider.fetch(cand.domain, self.api_key(ctx), ctx)
         except Exception as exc:
             result.flag("backlinks_error")
             result.metrics["backlinks_error"] = str(exc)[:200]
@@ -121,9 +145,10 @@ class BacklinksCheck:
         m = result.metrics
         for k, v in data.items():
             m[f"bl_{k}"] = v
-        m["bl_spam_anchor_ratio"] = round(ratio, 2)
-        m["bl_top_anchors"] = " | ".join(a for a, _ in anchors[:5])
-
+        m["bl_provider"] = cfg["provider"]
+        if anchors:
+            m["bl_spam_anchor_ratio"] = round(ratio, 2)
+            m["bl_top_anchors"] = " | ".join(a for a, _ in anchors[:5])
         if "trust_flow" in data and data.get("citation_flow"):
             m["bl_tf_cf"] = round(data["trust_flow"] / data["citation_flow"], 2)
 
@@ -133,3 +158,5 @@ class BacklinksCheck:
             return result.reject(self.name, f"спамні анкори ({ratio:.0%})")
         if "bl_tf_cf" in m and m["bl_tf_cf"] < cfg["min_tf_cf_ratio"]:
             return result.reject(self.name, f"низьке TF/CF ({m['bl_tf_cf']})")
+        if data.get("spam_score", 0) > cfg.get("max_spam_score", 100):
+            return result.reject(self.name, f"Moz Spam Score {data['spam_score']:g}")
