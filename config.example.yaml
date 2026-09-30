@@ -1,0 +1,52 @@
+# Скопіюйте в config.yaml і налаштуйте. Невказані ключі беруться з seguro/config.py.
+concurrency: 10
+cache_path: seguro_cache.sqlite
+cache_ttl_days: 14
+host_limits:
+  web.archive.org: 3   # архів банить за частоту, не піднімайте сильно
+
+prefilter:
+  allowed_tlds: [com, net, org, ua, pl, de]
+  min_length: 3
+  max_length: 18
+  max_hyphens: 1
+  allow_digits: false
+  stopwords: [xxx, porn, sex, viagra, cialis, loan, replica]
+
+blacklist:
+  enabled: true
+  # Spamhaus не відповідає публічним резолверам. Варіанти:
+  #  - свій резолвер (unbound) у nameservers;
+  #  - безкоштовний ключ Spamhaus DQS: "<key>.dbl.dq.spamhaus.net".
+  zones: [dbl.spamhaus.org, multi.surbl.org, multi.uribl.com]
+  nameservers: []
+
+rdap:
+  enabled: true
+
+wayback:
+  enabled: true
+  min_snapshots: 10
+  min_years_active: 2
+  sample_per_year: 1
+  max_samples: 8
+  target_languages: [uk, en]
+  reject_categories: [pharma, adult, doorway_cjk]
+  max_parking_ratio: 0.6
+
+backlinks:
+  provider: none          # none | majestic | ahrefs
+  api_key_env: SEGURO_BACKLINKS_KEY
+  min_ref_domains: 10
+  min_tf_cf_ratio: 0.5    # лише для Majestic
+  max_spam_anchor_ratio: 0.2
+
+scoring:
+  min_score: 40
+  weights:
+    history: 0.25
+    backlinks: 0.25
+    topical: 0.15
+    age: 0.15
+    geo: 0.10
+    cleanliness: 0.10
